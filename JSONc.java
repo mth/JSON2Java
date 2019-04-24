@@ -73,7 +73,7 @@ public class JSONc {
                             return pos + 1;
                         case '\\':
                             buf.append(new String(data, ss, pos - ss));
-                            if (pos < len) {
+                            if (++pos < len) {
                                 ss = pos + 1;
                                 switch (data[pos]) {
                                 case '/':
@@ -105,8 +105,10 @@ public class JSONc {
                                     }
                                     pos += 3;
                                     ss = pos + 1;
+                                    continue;
                                 }
                             }
+                            return -pos;
                         }
                     }
                     break;

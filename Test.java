@@ -1,6 +1,6 @@
 import java.io.*;
 import java.nio.*;
-import java.util.Map;
+import java.util.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Test {
@@ -22,12 +22,16 @@ public class Test {
         int n = 0;
         long t = System.currentTimeMillis();
         for (int i = 0; i < cycles; ++i) {
-            n += ((Map) (usechar ? parseC(bytes)
-                                 : JSONb.parse(bytes))).size();
+            Object x = usechar ? parseC(bytes) : JSONb.parse(bytes);
+            if (x instanceof Map) {
+                n += ((Map) x).size();
+            } else if (x instanceof Collection) {
+                n += ((Collection) x).size();
+            }
         }
         t = System.currentTimeMillis() - t;
         System.out.println(cycles + " iterations, average "
-                            + (t * 1000 / cycles / 1000.0) + "ms");
+                            + (t * 10000 / cycles / 10000.0) + "ms");
     }
 
     private static Object parseC(byte[] bytes) {
