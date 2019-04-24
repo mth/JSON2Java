@@ -54,7 +54,6 @@ public class JSON2Java {
 
     static int parse(char[] data, int pos, int end, List<Object> result) {
         List<Object> array = null;
-        HashMap<Object, Object> map = null;
         int state = 0;
         while (pos >= 0) {
             for (; pos < end && data[pos] <= ' '; ++pos);
@@ -70,9 +69,7 @@ public class JSON2Java {
                     continue;
                 case '{':
                     state = OBJ_FST;
-                    map = new HashMap<>();
                     array = new ArrayList<>(2);
-                    result.add(map);
                     continue;
                 case '"':
                     StringBuilder buf = new StringBuilder();
@@ -169,6 +166,7 @@ public class JSON2Java {
                 break;
             case OBJ_FST:
                 if (c == '}') {
+                    result.add(Collections.emptyMap());
                     return pos;
                 }
             case OBJ:
@@ -184,8 +182,6 @@ public class JSON2Java {
                 }
                 pos = parse(data, pos, end, array);
                 if (pos >= 0) {
-                    map.put(array.get(0), array.get(1));
-                    array.clear();
                     state = OBJ_SEP;
                 }
                 continue;
@@ -195,6 +191,11 @@ public class JSON2Java {
                     state = OBJ;
                     continue;
                 case '}':
+                    Map<Object, Object> map = new HashMap<>();
+                    for (int i = 0; i < array.size(); i += 2) {
+                        map.put(array.get(i), array.get(i + 1));
+                    }
+                    result.add(map);
                     return pos;
                 }
                 break;
