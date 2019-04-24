@@ -20,10 +20,14 @@ public class JSONc {
     }
 
     public static Object parse(char[] data) {
+        return parse(data, data.length);
+    }
+
+    public static Object parse(char[] data, int len) {
         List<Object> result = new ArrayList<>(1);
-        int pos = parse(data, 0, result);
-        for (; pos >= 0 && pos < data.length && data[pos] <= ' '; ++pos);
-        if (pos != data.length) {
+        int pos = parse(data, len, 0, result);
+        for (; pos >= 0 && pos < len && data[pos] <= ' '; ++pos);
+        if (pos != len) {
             throw new RuntimeException("parse error at " + Math.abs(pos));
         }
         return result.get(0);
@@ -37,13 +41,13 @@ public class JSONc {
         return json instanceof List ? (List<Object>) json : Collections.emptyList();
     }
 
-    static int parse(char[] data, int pos, List<Object> result) {
+    static int parse(char[] data, int len, int pos, List<Object> result) {
         List<Object> array = null;
         HashMap<Object, Object> map = null;
         int state = 0;
         while (pos >= 0) {
-            for (; pos < data.length && data[pos] <= ' '; ++pos);
-            char c = pos <= data.length ? data[pos] : 0;
+            for (; pos < len && data[pos] <= ' '; ++pos);
+            char c = pos <= len ? data[pos] : 0;
             ++pos;
             switch (state) { // break means error
             case 0:
@@ -61,7 +65,7 @@ public class JSONc {
                     continue;
                 case '"':
                     StringBuilder buf = new StringBuilder();
-                    for (int ss = pos; pos < data.length; ++pos) {
+                    for (int ss = pos; pos < len; ++pos) {
                         switch (data[pos]) {
                         case '"':
                             buf.append(new String(data, ss, pos - ss));
@@ -69,7 +73,7 @@ public class JSONc {
                             return pos + 1;
                         case '\\':
                             buf.append(new String(data, ss, pos - ss));
-                            if (pos < data.length) {
+                            if (pos < len) {
                                 ss = pos + 1;
                                 switch (data[pos]) {
                                 case '/':
@@ -108,7 +112,7 @@ public class JSONc {
                     break;
                 default:
                     int ss = --pos;
-                    for (; pos < data.length; ++pos) {
+                    for (; pos < len; ++pos) {
                         c = data[pos];
                         if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'Z' 
                                 || c >= 'a' && c <= 'z' || c == '.'
@@ -138,7 +142,7 @@ public class JSONc {
                     return pos;
                 }
             case ARRAY:
-                pos = parse(data, pos - 1, array);
+                pos = parse(data, len, pos - 1, array);
                 state = ARRAY_SEP;
                 continue;
             case ARRAY_SEP:
@@ -158,14 +162,14 @@ public class JSONc {
                 if (c != '"') {
                     break;
                 }
-                pos = parse(data, pos - 1, array);
+                pos = parse(data, len, pos - 1, array);
                 state = PAIR;
                 continue;
             case PAIR:
                 if (c != ':') {
                     break;
                 }
-                pos = parse(data, pos, array);
+                pos = parse(data, len, pos, array);
                 if (pos >= 0) {
                     map.put(array.get(0), array.get(1));
                     array.clear();
