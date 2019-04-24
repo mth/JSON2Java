@@ -37,7 +37,7 @@ public class JSON2Java {
         if (pos != end) {
             throw new RuntimeException("parse error at " + Math.abs(pos));
         }
-        return result.get(0);
+        return result.size() == 0 ? null : result.get(0);
     }
 
     public static Map<String, Object> object(Object json) {
