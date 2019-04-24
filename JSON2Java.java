@@ -1,6 +1,7 @@
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,25 +18,28 @@ public class JSON2Java {
     private static final int PAIR      = 6;
     private static final int OBJ_SEP   = 7;
 
-    public static void main(String[] a) {
+    public static void main(String[] a) throws ParseException {
         System.err.println(parse(a[0].toCharArray()));
     }
 
-    public static Object parse(ByteBuffer bytes, Charset charset) {
+    public static Object parse(ByteBuffer bytes, Charset charset)
+            throws ParseException {
         CharBuffer c = charset.decode(bytes);
         return parse(c.array(), 0, c.length());
     }
 
-    public static Object parse(char[] data) {
+    public static Object parse(char[] data) throws ParseException {
         return parse(data, 0, data.length);
     }
 
-    public static Object parse(char[] data, int pos, int end) {
+    public static Object parse(char[] data, int pos, int end)
+            throws ParseException {
         List<Object> result = new ArrayList<>(1);
         pos = parse(data, pos, end, result);
         for (; pos >= 0 && pos < end && data[pos] <= ' '; ++pos);
         if (pos != end) {
-            throw new RuntimeException("parse error at " + Math.abs(pos));
+            pos = Math.abs(pos);
+            throw new ParseException("Parse error at " + pos, pos);
         }
         return result.size() == 0 ? null : result.get(0);
     }
