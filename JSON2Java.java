@@ -54,7 +54,7 @@ public class JSON2Java {
         int state = 0;
         while (pos >= 0) {
             for (; pos < end && data[pos] <= ' '; ++pos);
-            char c = pos <= end ? data[pos] : 0;
+            char c = pos < end ? data[pos] : 0;
             ++pos;
             switch (state) { // break means error
             case 0:
@@ -106,11 +106,11 @@ public class JSON2Java {
                                 case 'u':
                                     try {
                                         buf.append(Character.toChars(Integer.parseInt(
-                                                        new String(data, pos, 4), 16)));
+                                                        new String(data, pos + 1, 4), 16)));
                                     } catch (Exception ex) {
                                         return -pos;
                                     }
-                                    pos += 3;
+                                    pos += 4;
                                     ss = pos + 1;
                                     continue;
                                 }
