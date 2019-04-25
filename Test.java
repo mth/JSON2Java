@@ -29,7 +29,8 @@ public class Test {
             }
         }
         t = System.currentTimeMillis() - t;
-        System.out.println(cycles + " iterations, average "
-                            + (t * 10000 / cycles / 10000.0) + "ms");
+        System.out.println(cycles + " iterations in " + (t / 10 / 100.0) + "s; "
+            + (cycles * 100000 / t / 100.0) + " iter/s; "
+            + ((long) cycles * bytes.length * 10000 / t / 1024 / 1024 / 10.0) + " MB/s");
     }
 }

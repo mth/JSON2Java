@@ -83,18 +83,21 @@ public class JSON2Java {
                     continue;
                 case '{':
                     state = OBJ_FST;
-                    array = new ArrayList<>(2);
+                    array = new ArrayList<>();
                     continue;
                 case '"':
-                    StringBuilder buf = new StringBuilder();
+                    StringBuilder buf = null;
                     for (int ss = pos; pos < end; ++pos) {
                         switch (data[pos]) {
                         case '"':
-                            buf.append(new String(data, ss, pos - ss));
-                            stack.result.add(buf.toString());
+                            String s = new String(data, ss, pos - ss);
+                            stack.result.add(buf == null ? s : buf.append(s).toString());
                             ++pos;
                             break pop;
                         case '\\':
+                            if (buf == null) {
+                                buf = new StringBuilder();
+                            }
                             buf.append(new String(data, ss, pos - ss));
                             if (++pos < end) {
                                 ss = pos + 1;
@@ -122,7 +125,7 @@ public class JSON2Java {
                                 case 'u':
                                     try {
                                         buf.append(Character.toChars(Integer.parseInt(
-                                                        new String(data, pos + 1, 4), 16)));
+                                                    new String(data, pos + 1, 4), 16)));
                                     } catch (Exception ex) {
                                         return -pos;
                                     }
@@ -205,7 +208,7 @@ public class JSON2Java {
                 } else if (c != '}') {
                     return -pos;
                 }
-                Map<Object, Object> map = new HashMap<>();
+                Map<Object, Object> map = new HashMap<>(array.size() / 2);
                 for (int i = 0; i < array.size(); i += 2) {
                     map.put(array.get(i), array.get(i + 1));
                 }
