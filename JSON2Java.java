@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings("unchecked")
-public class JSON2Java {
+public final class JSON2Java {
     private static final int ARRAY_FST = 1;
     private static final int ARRAY     = 2;
     private static final int ARRAY_SEP = 3;
@@ -17,9 +17,9 @@ public class JSON2Java {
     private static final int OBJ       = 5;
     private static final int PAIR      = 6;
     private static final int OBJ_SEP   = 7;
-    private JSON2Java prev;
-    private List<Object> result;
-    private int state;
+    private final JSON2Java prev;
+    private final List<Object> result;
+    private final int state;
 
     private JSON2Java(JSON2Java prev, List<Object> result, int state) {
         this.prev = prev;
