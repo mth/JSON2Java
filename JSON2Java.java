@@ -17,6 +17,15 @@ public class JSON2Java {
     private static final int OBJ       = 5;
     private static final int PAIR      = 6;
     private static final int OBJ_SEP   = 7;
+    private JSON2Java prev;
+    private List<Object> result;
+    private int state;
+
+    private JSON2Java(JSON2Java prev, List<Object> result, int state) {
+        this.prev = prev;
+        this.result = result;
+        this.state = state;
+    }
 
     public static void main(String[] a) throws ParseException {
         System.err.println(parse(a[0].toCharArray()));
@@ -53,19 +62,24 @@ public class JSON2Java {
     }
 
     static int parse(char[] data, int pos, int end, List<Object> result) {
+        JSON2Java stack = new JSON2Java(null, result, 0);
         List<Object> array = null;
         int state = 0;
-        while (pos >= 0) {
+        for (;;) {
             for (; pos < end && data[pos] <= ' '; ++pos);
-            char c = pos < end ? data[pos] : 0;
+            if (pos >= end) {
+                return -pos;
+            }
+            char c = data[pos];
             ++pos;
-            switch (state) { // break means error
+        pop:
+            switch (state) {
             case 0:
                 switch (c) {
                 case '[':
                     state = ARRAY_FST;
                     array = new ArrayList<>();
-                    result.add(array);
+                    stack.result.add(array);
                     continue;
                 case '{':
                     state = OBJ_FST;
@@ -77,8 +91,9 @@ public class JSON2Java {
                         switch (data[pos]) {
                         case '"':
                             buf.append(new String(data, ss, pos - ss));
-                            result.add(buf.toString());
-                            return pos + 1;
+                            stack.result.add(buf.toString());
+                            ++pos;
+                            break pop;
                         case '\\':
                             buf.append(new String(data, ss, pos - ss));
                             if (++pos < end) {
@@ -119,7 +134,7 @@ public class JSON2Java {
                             return -pos;
                         }
                     }
-                    break;
+                    return -pos;
                 default:
                     int ss = --pos;
                     for (; pos < end; ++pos) {
@@ -132,76 +147,76 @@ public class JSON2Java {
                     }
                     String s = new String(data, ss, pos - ss);
                     if (s.equals("null")) {
-                        result.add(null);
+                        stack.result.add(null);
                     } else if (s.equals("false")) {
-                        result.add(Boolean.FALSE);
+                        stack.result.add(Boolean.FALSE);
                     } else if (s.equals("true")) {
-                        result.add(Boolean.TRUE);
+                        stack.result.add(Boolean.TRUE);
                     } else {
                         try {
-                            result.add(new Double(s));
+                            stack.result.add(new Double(s));
                         } catch (Exception ex) {
-                            break;
+                            return -pos;
                         }
                     }
-                    return pos;
                 }
                 break;
             case ARRAY_FST:
                 if (c == ']') {
-                    return pos;
+                    break;
                 }
             case ARRAY:
-                pos = parse(data, pos - 1, end, array);
-                state = ARRAY_SEP;
+                stack = new JSON2Java(stack, array, ARRAY_SEP);
+                state = 0;
+                --pos;
                 continue;
             case ARRAY_SEP:
-                switch (c) {
-                case ',':
+                if (c == ',') {
                     state = ARRAY;
                     continue;
-                case ']':
-                    return pos;
+                } else if (c != ']') {
+                    return -pos;
                 }
                 break;
             case OBJ_FST:
                 if (c == '}') {
-                    result.add(Collections.emptyMap());
-                    return pos;
+                    stack.result.add(Collections.emptyMap());
+                    break;
                 }
             case OBJ:
                 if (c != '"') {
-                    break;
+                    return -pos;
                 }
-                pos = parse(data, pos - 1, end, array);
-                state = PAIR;
+                stack = new JSON2Java(stack, array, PAIR);
+                state = 0;
+                --pos;
                 continue;
             case PAIR:
                 if (c != ':') {
-                    break;
+                    return -pos;
                 }
-                pos = parse(data, pos, end, array);
-                if (pos >= 0) {
-                    state = OBJ_SEP;
-                }
+                stack = new JSON2Java(stack, array, OBJ_SEP);
+                state = 0;
                 continue;
             case OBJ_SEP:
-                switch (c) {
-                case ',':
+                if (c == ',') {
                     state = OBJ;
                     continue;
-                case '}':
-                    Map<Object, Object> map = new HashMap<>();
-                    for (int i = 0; i < array.size(); i += 2) {
-                        map.put(array.get(i), array.get(i + 1));
-                    }
-                    result.add(map);
-                    return pos;
+                } else if (c != '}') {
+                    return -pos;
                 }
-                break;
+                Map<Object, Object> map = new HashMap<>();
+                for (int i = 0; i < array.size(); i += 2) {
+                    map.put(array.get(i), array.get(i + 1));
+                }
+                stack.result.add(map);
             }
-            return -pos; // error
+            if (stack.prev == null) {
+                return pos;
+            }
+            array = stack.result;
+            state = stack.state;
+            stack = stack.prev;
         }
-        return pos;
     }
 }
