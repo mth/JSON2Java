@@ -61,7 +61,7 @@ public final class JSON2Java {
         return json instanceof List ? (List<Object>) json : Collections.emptyList();
     }
 
-    static int parse(char[] data, int pos, int end, List<Object> result) {
+    private static int parse(char[] data, int pos, int end, List<Object> result) {
         JSON2Java stack = new JSON2Java(null, result, 0);
         List<Object> array = null;
         int state = 0;
