@@ -208,7 +208,7 @@ public final class JSON2Java {
                 } else if (c != '}') {
                     return -pos;
                 }
-                Map<Object, Object> map = new HashMap<>(array.size() / 2);
+                Map<Object, Object> map = new HashMap<>(array.size() * 3 / 2 + 1);
                 for (int i = 0; i < array.size(); i += 2) {
                     map.put(array.get(i), array.get(i + 1));
                 }
