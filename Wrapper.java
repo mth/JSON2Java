@@ -11,10 +11,10 @@ public class Wrapper implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        return object.get(method.getName());
+        return wrap(object.get(method.getName()), method.getReturnType());
     }
 
-    public static <T> T proxy(Object json, Class<T> type) {
+    public static <T> T wrap(Object json, Class<T> type) {
         if (json == null) {
             return null;
         }
@@ -27,11 +27,14 @@ public class Wrapper implements InvocationHandler {
         Class<?> ct = type.getComponentType();
         if (ct != null) {
             List<?> array = (List<?>) json;
-            Object[] result = (Object[]) Array.newInstance(ct, array.size());
-            for (int i = 0; i < result.length; ++i) {
-                result[i] = proxy(array.get(i), ct);
+            T result = (T) Array.newInstance(ct, array.size());
+            for (int i = 0; i < array.size(); ++i) {
+                Object v = wrap(array.get(i), ct);
+                if (v != null) {
+                    Array.set(result, i, v);
+                }
             }
-            return (T) (Object) result;
+            return result;
         }
         return (T) json;
     }
